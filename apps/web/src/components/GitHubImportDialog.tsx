@@ -56,7 +56,14 @@ export default function GitHubImportDialog({ open, onClose }: GitHubImportDialog
   async function handleDetect() {
     setError('');
     const normalized = normalizeUrl(repoUrl);
-    if (!normalized.includes('github.com')) {
+    // Validate the host is exactly github.com (prevents substring bypass)
+    try {
+      const parsed = new URL(normalized);
+      if (parsed.hostname !== 'github.com') {
+        setError('Please enter a valid GitHub repository URL');
+        return;
+      }
+    } catch {
       setError('Please enter a valid GitHub repository URL');
       return;
     }
