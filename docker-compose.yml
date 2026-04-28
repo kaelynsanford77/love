@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  orchestrator:
+    build: ./apps/orchestrator
+    ports:
+      - "3001:3001"
+    volumes:
+      - projects_data:/data/projects
+    env_file: .env
+
+  ide:
+    build: ./apps/ide
+    ports:
+      - "3000:80"
+    depends_on:
+      - orchestrator
+
+volumes:
+  projects_data:
