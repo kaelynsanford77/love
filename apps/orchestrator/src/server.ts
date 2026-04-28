@@ -40,12 +40,10 @@ app.use('/chat/*', async (c, next) => {
   return next();
 });
 
-// Health check
+// Health checks
 app.get('/', (c) => c.json({ ok: true, service: 'lovable-solo-orchestrator', ts: Date.now() }));
-app.get('/health', (c) => c.json({ ok: true }));
-app.get('/healthz', (c) =>
-  c.json({ ok: true, uptime: process.uptime(), ts: Date.now() })
-);
+app.get('/health', (c) => c.json({ ok: true, uptime: process.uptime(), ts: Date.now() }));
+app.get('/healthz', (c) => c.json({ ok: true, uptime: process.uptime(), ts: Date.now() }));
 
 // Routes
 app.route('/chat', chatRoutes);
