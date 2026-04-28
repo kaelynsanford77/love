@@ -1,0 +1,37 @@
+{$DOMAIN:localhost} {
+    # Basic auth (optional - set in .env)
+    # basicauth {
+    #     {$BASIC_AUTH_USER} {$BASIC_AUTH_PASS_HASH}
+    # }
+
+    # IDE (frontend)
+    handle /* {
+        reverse_proxy ide:3000
+    }
+
+    # Orchestrator API
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy orchestrator:4000
+    }
+
+    # WebSocket support for file watching
+    handle /fs/watch* {
+        reverse_proxy orchestrator:4000
+    }
+
+    # Compress responses
+    encode gzip
+
+    # Headers
+    header {
+        X-Frame-Options SAMEORIGIN
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+
+    log {
+        output stdout
+        format console
+    }
+}

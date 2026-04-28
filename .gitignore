@@ -1,0 +1,5 @@
+apps/ide/dist
+apps/ide/node_modules
+apps/orchestrator/node_modules
+node_modules
+.env
