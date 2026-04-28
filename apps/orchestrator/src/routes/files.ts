@@ -131,13 +131,14 @@ router.get("/:projectId/search", async (c) => {
 
   if (!fs.existsSync(projectPath)) return c.json({ error: "Not found" }, 404);
 
-  const { exec } = await import("child_process");
+  const { execFile } = await import("child_process");
   const { promisify } = await import("util");
-  const execAsync = promisify(exec);
+  const execFileAsync = promisify(execFile);
 
   try {
-    const { stdout } = await execAsync(
-      `rg --json -l "${query.replace(/"/g, '\\"')}" --glob "!node_modules" --glob "!.git" .`,
+    const { stdout } = await execFileAsync(
+      "rg",
+      ["--json", "-l", query, "--glob", "!node_modules", "--glob", "!.git", "."],
       { cwd: projectPath }
     );
     const files = stdout

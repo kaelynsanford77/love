@@ -2,13 +2,13 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { getDb } from "../db";
-import { exec, spawn } from "child_process";
+import { execFile, spawn } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const router = new Hono();
 
 const WORKSPACES_DIR = () =>
@@ -209,16 +209,17 @@ router.post("/import", zValidator("json", importSchema), async (c) => {
   fs.mkdirSync(wsDir, { recursive: true });
 
   try {
-    // Clone repo
-    await execAsync(
-      `git clone --depth 1 --branch ${branch} ${repoUrl} ${projectPath}`,
+    // Clone repo (use execFile with args array to prevent injection)
+    await execFileAsync(
+      "git",
+      ["clone", "--depth", "1", "--branch", branch, repoUrl, projectPath],
       { timeout: 60000 }
     );
 
     // Install deps
     const hasBun = fs.existsSync(path.join(projectPath, "bun.lockb"));
     const mgr = hasBun ? "bun" : "npm";
-    await execAsync(`${mgr} install`, { cwd: projectPath, timeout: 120000 });
+    await execFileAsync(mgr, ["install"], { cwd: projectPath, timeout: 120000 });
 
     const framework = detectFramework(projectPath);
     const port = allocatePort();
@@ -270,11 +271,12 @@ router.post("/import-github", zValidator("json", importGithubSchema), async (c) 
   fs.mkdirSync(wsDir, { recursive: true });
 
   try {
-    await execAsync(
-      `git clone --depth 1 --branch ${branch} ${repoUrl} ${projectPath}`,
+    await execFileAsync(
+      "git",
+      ["clone", "--depth", "1", "--branch", branch, repoUrl, projectPath],
       { timeout: 60000 }
     );
-    await execAsync(`bun install`, { cwd: projectPath, timeout: 120000 });
+    await execFileAsync("bun", ["install"], { cwd: projectPath, timeout: 120000 });
 
     const framework = detectFramework(projectPath);
     const port = allocatePort();
@@ -326,7 +328,8 @@ router.post("/:id/duplicate", async (c) => {
   const dstPath = path.join(WORKSPACES_DIR(), newId);
 
   try {
-    await execAsync(`cp -r ${srcPath} ${dstPath}`);
+    // Use Node fs.cpSync instead of shell cp to avoid injection
+    fs.cpSync(srcPath, dstPath, { recursive: true });
     const port = allocatePort();
     const now = Date.now();
     db.prepare(

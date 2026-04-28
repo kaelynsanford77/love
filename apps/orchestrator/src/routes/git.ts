@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import path from "path";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const router = new Hono();
 
 const WORKSPACES_DIR = () =>
@@ -17,7 +17,7 @@ function projectPath(id: string) {
 router.get("/:projectId/status", async (c) => {
   const id = c.req.param("projectId");
   try {
-    const { stdout } = await execAsync("git status --porcelain", { cwd: projectPath(id) });
+    const { stdout } = await execFileAsync("git", ["status", "--porcelain"], { cwd: projectPath(id) });
     const files = stdout
       .trim()
       .split("\n")
@@ -36,8 +36,9 @@ router.get("/:projectId/status", async (c) => {
 router.get("/:projectId/log", async (c) => {
   const id = c.req.param("projectId");
   try {
-    const { stdout } = await execAsync(
-      'git log --oneline -20 --pretty=format:"%H|%an|%ae|%ar|%s"',
+    const { stdout } = await execFileAsync(
+      "git",
+      ["log", "--oneline", "-20", "--pretty=format:%H|%an|%ae|%ar|%s"],
       { cwd: projectPath(id) }
     );
     const commits = stdout
@@ -49,7 +50,7 @@ router.get("/:projectId/log", async (c) => {
         return { hash, author, email, date, message: rest.join("|") };
       });
     return c.json({ commits });
-  } catch (e) {
+  } catch (_e) {
     return c.json({ commits: [] });
   }
 });
@@ -59,8 +60,8 @@ router.post("/:projectId/commit", async (c) => {
   const id = c.req.param("projectId");
   const { message = "Update" } = await c.req.json();
   try {
-    await execAsync("git add -A", { cwd: projectPath(id) });
-    const { stdout } = await execAsync(`git commit -m "${message.replace(/"/g, '\\"')}"`, {
+    await execFileAsync("git", ["add", "-A"], { cwd: projectPath(id) });
+    const { stdout } = await execFileAsync("git", ["commit", "-m", message], {
       cwd: projectPath(id),
     });
     return c.json({ ok: true, output: stdout });
@@ -74,7 +75,7 @@ router.post("/:projectId/push", async (c) => {
   const id = c.req.param("projectId");
   const { remote = "origin", branch = "main" } = await c.req.json() || {};
   try {
-    const { stdout } = await execAsync(`git push ${remote} ${branch}`, {
+    const { stdout } = await execFileAsync("git", ["push", remote, branch], {
       cwd: projectPath(id),
     });
     return c.json({ ok: true, output: stdout });
@@ -87,7 +88,7 @@ router.post("/:projectId/push", async (c) => {
 router.post("/:projectId/pull", async (c) => {
   const id = c.req.param("projectId");
   try {
-    const { stdout } = await execAsync("git pull", { cwd: projectPath(id) });
+    const { stdout } = await execFileAsync("git", ["pull"], { cwd: projectPath(id) });
     return c.json({ ok: true, output: stdout });
   } catch (e: any) {
     return c.json({ error: e.message, stderr: e.stderr }, 500);
@@ -98,9 +99,9 @@ router.post("/:projectId/pull", async (c) => {
 router.post("/:projectId/init", async (c) => {
   const id = c.req.param("projectId");
   try {
-    const { stdout: init } = await execAsync("git init", { cwd: projectPath(id) });
-    await execAsync("git add -A", { cwd: projectPath(id) });
-    const { stdout: commit } = await execAsync('git commit -m "Initial commit"', {
+    const { stdout: init } = await execFileAsync("git", ["init"], { cwd: projectPath(id) });
+    await execFileAsync("git", ["add", "-A"], { cwd: projectPath(id) });
+    const { stdout: commit } = await execFileAsync("git", ["commit", "-m", "Initial commit"], {
       cwd: projectPath(id),
     });
     return c.json({ ok: true, output: `${init}\n${commit}` });
@@ -114,8 +115,8 @@ router.post("/:projectId/remote", async (c) => {
   const id = c.req.param("projectId");
   const { url } = await c.req.json();
   try {
-    await execAsync(`git remote add origin ${url}`, { cwd: projectPath(id) }).catch(() =>
-      execAsync(`git remote set-url origin ${url}`, { cwd: projectPath(id) })
+    await execFileAsync("git", ["remote", "add", "origin", url], { cwd: projectPath(id) }).catch(() =>
+      execFileAsync("git", ["remote", "set-url", "origin", url], { cwd: projectPath(id) })
     );
     return c.json({ ok: true });
   } catch (e: any) {
@@ -128,10 +129,10 @@ router.get("/:projectId/diff", async (c) => {
   const id = c.req.param("projectId");
   const file = c.req.query("file");
   try {
-    const cmd = file ? `git diff -- "${file}"` : "git diff";
-    const { stdout } = await execAsync(cmd, { cwd: projectPath(id) });
+    const args = file ? ["diff", "--", file] : ["diff"];
+    const { stdout } = await execFileAsync("git", args, { cwd: projectPath(id) });
     return c.json({ diff: stdout });
-  } catch (e) {
+  } catch (_e) {
     return c.json({ diff: "" });
   }
 });
