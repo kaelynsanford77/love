@@ -1,0 +1,15 @@
+{
+  "name": "lovable-solo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "concurrently \"bun run --cwd apps/orchestrator dev\" \"bun run --cwd apps/ide dev\"",
+    "build": "bun run --cwd apps/orchestrator build && bun run --cwd apps/ide build",
+    "docker:up": "docker compose -f docker/docker-compose.yml up --build",
+    "docker:down": "docker compose -f docker/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
