@@ -1,0 +1,1 @@
+export { replaceLines } from './view';
