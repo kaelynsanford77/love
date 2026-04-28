@@ -1,10 +1,6 @@
 import type { ChatCompletionTool } from 'openai/resources';
 import fs from 'fs';
 import path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
 
 export const TOOL_DEFINITIONS: ChatCompletionTool[] = [
   {
@@ -160,19 +156,35 @@ export async function executeTool(
 
       case 'run_command': {
         const timeout = args.timeout || 30000;
-        try {
-          const { stdout, stderr } = await execAsync(args.command, {
+
+        // Validate command against allowlist
+        const ALLOWED_PREFIXES = ['bun ', 'npm ', 'npx ', 'node ', 'tsc', 'vite', 'git ', 'ls', 'cat ', 'echo ', 'pwd', 'find '];
+        const trimmedCmd = (args.command || '').trim();
+        if (!ALLOWED_PREFIXES.some(p => trimmedCmd.startsWith(p))) {
+          return { success: false, output: `Command not allowed: ${trimmedCmd}. Use bun/npm/npx/node/git/tsc/vite commands.` };
+        }
+
+        // Use spawn with shell:false for safety
+        const parts = trimmedCmd.split(/\s+/);
+        const execResult = await new Promise<ToolExecutionResult>((resolve) => {
+          const { spawn } = require('child_process');
+          const proc = spawn(parts[0], parts.slice(1), {
             cwd: projectPath,
             timeout,
-            maxBuffer: 2 * 1024 * 1024,
+            shell: false,
+            env: process.env,
           });
-          return { success: true, output: [stdout, stderr].filter(Boolean).join('\n') };
-        } catch (e: any) {
-          return {
-            success: false,
-            output: `Command failed with exit code ${e.code}:\n${e.stdout || ''}\n${e.stderr || e.message}`,
-          };
-        }
+          let stdout = '';
+          let stderr = '';
+          proc.stdout?.on('data', (d: Buffer) => { stdout += d.toString() });
+          proc.stderr?.on('data', (d: Buffer) => { stderr += d.toString() });
+          proc.on('close', (code: number) => {
+            const output = [stdout, stderr].filter(Boolean).join('\n');
+            resolve({ success: code === 0, output: output || '(no output)' });
+          });
+          proc.on('error', (err: Error) => resolve({ success: false, output: err.message }));
+        });
+        return execResult;
       }
 
       case 'list_files': {

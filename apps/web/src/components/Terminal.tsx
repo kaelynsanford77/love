@@ -80,7 +80,7 @@ export default function Terminal({ projectId, onClose }: TerminalProps) {
       terminalsRef.current.set(tabId, { xterm, fitAddon })
 
       // Connect WebSocket
-      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:3001/api/terminal?projectId=${projectId}&sessionId=${sessionId}`
+      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:3001/api/terminal?projectId=${encodeURIComponent(projectId)}&sessionId=${encodeURIComponent(sessionId)}`
       const ws = new WebSocket(wsUrl)
       websocketsRef.current.set(tabId, ws)
 

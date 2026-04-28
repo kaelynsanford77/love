@@ -7,12 +7,20 @@ import {
 function sanitizePreviewUrl(input: string): string {
   try {
     const parsed = new URL(input);
-    // Only allow http/https to localhost or local network
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return '';
-    }
+    // Only allow http/https
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '';
     const hostname = parsed.hostname;
-    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.endsWith('.local');
+    // Allow localhost and private network ranges
+    const isLocal =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.endsWith('.local') ||
+      // 10.0.0.0/8
+      /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname) ||
+      // 172.16.0.0/12
+      /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(hostname) ||
+      // 192.168.0.0/16
+      /^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname);
     return isLocal ? input : '';
   } catch {
     return '';

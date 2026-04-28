@@ -23,9 +23,11 @@ router.post('/connect', async (req, res) => {
       return res.status(400).json({ error: 'Supabase URL must use HTTPS' });
     }
 
-    // Only allow supabase.co or self-hosted instances (no localhost in production patterns)
+    // Validate hostname more precisely (exact suffix match for supabase.co/supabase.in)
     const allowedSuffixes = ['.supabase.co', '.supabase.in'];
-    const isAllowed = allowedSuffixes.some(s => parsedUrl.hostname.endsWith(s));
+    const isAllowed = allowedSuffixes.some(s => {
+      return parsedUrl.hostname === s.slice(1) || parsedUrl.hostname.endsWith(s);
+    });
     if (!isAllowed && process.env.NODE_ENV === 'production') {
       return res.status(400).json({ error: 'Supabase URL hostname not recognized' });
     }
