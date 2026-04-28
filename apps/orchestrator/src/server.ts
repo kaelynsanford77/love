@@ -1,6 +1,4 @@
 import 'dotenv/config';
-import path from 'path';
-import fs from 'fs/promises';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
@@ -11,9 +9,10 @@ import { gitRoutes } from './routes/git';
 import { searchRoutes } from './routes/search';
 import { classifyRoutes } from './routes/classify';
 import { previewRoutes } from './routes/preview';
-import { simpleGit } from 'simple-git';
-
-const WORKSPACES = path.resolve(process.env.WORKSPACES_ROOT ?? './workspaces');
+import { projectsRoutes } from './routes/projects';
+import { runtimeRoutes } from './routes/runtime';
+import { dbRoutes } from './routes/db';
+import { publishRoutes } from './routes/publish';
 
 const app = new Hono();
 
@@ -41,9 +40,10 @@ app.use('/chat/*', async (c, next) => {
   return next();
 });
 
-// Health check
+// Health checks
 app.get('/', (c) => c.json({ ok: true, service: 'lovable-solo-orchestrator', ts: Date.now() }));
-app.get('/health', (c) => c.json({ ok: true }));
+app.get('/health', (c) => c.json({ ok: true, uptime: process.uptime(), ts: Date.now() }));
+app.get('/healthz', (c) => c.json({ ok: true, uptime: process.uptime(), ts: Date.now() }));
 
 // Routes
 app.route('/chat', chatRoutes);
@@ -53,6 +53,10 @@ app.route('/git', gitRoutes);
 app.route('/search', searchRoutes);
 app.route('/classify', classifyRoutes);
 app.route('/preview', previewRoutes);
+app.route('/projects', projectsRoutes);
+app.route('/runtime', runtimeRoutes);
+app.route('/db', dbRoutes);
+app.route('/publish', publishRoutes);
 
 // Analytics stub
 app.get('/analytics', (c) => c.json({ message: 'Analytics not configured', tables: [], stats: {} }));
@@ -60,80 +64,6 @@ app.get('/analytics', (c) => c.json({ message: 'Analytics not configured', table
 // Cloud/DB stubs
 app.get('/cloud/tables', (c) => c.json({ tables: [] }));
 app.post('/cloud/sql', (c) => c.json({ rows: [], error: 'No database configured' }));
-
-// Health alias
-app.get('/healthz', (c) =>
-  c.json({ ok: true, uptime: process.uptime(), ts: Date.now() })
-);
-
-// Projects
-app.get('/projects', async (c) => {
-  try {
-    const entries = await fs.readdir(WORKSPACES, { withFileTypes: true });
-    const projects = entries.filter((e) => e.isDirectory()).map((e) => e.name);
-    return c.json({ projects });
-  } catch {
-    return c.json({ projects: ['default'] });
-  }
-});
-
-app.post('/projects/switch', async (c) => {
-  const { projectId } = await c.req.json();
-  return c.json({ ok: true, projectId });
-});
-
-app.post('/projects/create', async (c) => {
-  const { name } = await c.req.json();
-  const projectPath = path.join(WORKSPACES, name);
-  await fs.mkdir(projectPath, { recursive: true });
-  await fs.writeFile(
-    path.join(projectPath, 'README.md'),
-    `# ${name}\n\nCreated with Lovable Solo.\n`
-  );
-  const git = simpleGit(projectPath);
-  await git.init();
-  await git.add('.');
-  await git.commit('Initial commit');
-  return c.json({ ok: true, projectId: name });
-});
-
-// Runtime
-const runtimeStatus = { status: 'running', pid: process.pid };
-
-app.get('/runtime/status', (c) => c.json(runtimeStatus));
-
-app.post('/runtime/restart', (c) => {
-  runtimeStatus.status = 'running';
-  return c.json({ ok: true, message: 'Runtime restarted' });
-});
-
-// DB introspection stubs (wired to cloud/db config when available)
-app.get('/db/tables', (c) => {
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return c.json({ tables: [], note: 'No DATABASE_URL configured' });
-  return c.json({ tables: [] });
-});
-
-app.post('/db/query', async (c) => {
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return c.json({ rows: [], error: 'No DATABASE_URL configured' }, 503);
-  const { sql, params } = await c.req.json();
-  // Passthrough stub — a real implementation would use a pg client here
-  return c.json({ rows: [], sql, params });
-});
-
-// Publish / deploy trigger
-app.post('/publish', async (c) => {
-  const body = await c.req.json().catch(() => ({}));
-  const projectId: string = body.projectId ?? 'default';
-  return c.json({
-    ok: true,
-    message: 'Build triggered',
-    url: `http://localhost:3000/preview/${projectId}`,
-    status: 'building',
-    projectId,
-  });
-});
 
 const port = parseInt(process.env.ORCHESTRATOR_PORT ?? process.env.PORT ?? '4000', 10);
 console.log(`🚀 Orchestrator running on http://localhost:${port}`);
