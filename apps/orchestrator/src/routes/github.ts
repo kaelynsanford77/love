@@ -20,11 +20,28 @@ router.post('/import', async (req, res) => {
     const projectPath = path.join(PROJECTS_DIR, id);
     fs.mkdirSync(projectPath, { recursive: true });
 
+    // Validate URL is a proper GitHub URL before injecting token
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(repoUrl);
+    } catch {
+      return res.status(400).json({ error: 'Invalid repository URL' });
+    }
+
+    if (parsedUrl.protocol !== 'https:') {
+      return res.status(400).json({ error: 'Only HTTPS URLs are allowed' });
+    }
+
+    const allowedHosts = ['github.com', 'gitlab.com', 'bitbucket.org'];
+    if (!allowedHosts.includes(parsedUrl.hostname)) {
+      return res.status(400).json({ error: `Host not allowed. Permitted: ${allowedHosts.join(', ')}` });
+    }
+
     // Clone the repo
     const token = process.env.GITHUB_TOKEN;
     let cloneUrl = repoUrl;
-    if (token && repoUrl.includes('github.com')) {
-      cloneUrl = repoUrl.replace('https://', `https://${token}@`);
+    if (token && parsedUrl.hostname === 'github.com') {
+      cloneUrl = `https://${token}@${parsedUrl.hostname}${parsedUrl.pathname}`;
     }
 
     const git = simpleGit();

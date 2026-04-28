@@ -4,6 +4,21 @@ import {
   AlertTriangle, X, ChevronDown, Layers
 } from 'lucide-react'
 
+function sanitizePreviewUrl(input: string): string {
+  try {
+    const parsed = new URL(input);
+    // Only allow http/https to localhost or local network
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return '';
+    }
+    const hostname = parsed.hostname;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.endsWith('.local');
+    return isLocal ? input : '';
+  } catch {
+    return '';
+  }
+}
+
 interface PreviewPanelProps {
   port: number
   projectId: string
@@ -85,7 +100,8 @@ export default function PreviewPanel({ port, projectId, onPortChange }: PreviewP
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter' && iframeRef.current) {
-                iframeRef.current.src = url
+                const safe = sanitizePreviewUrl(url);
+                if (safe) iframeRef.current.src = safe;
               }
             }}
             className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-3 py-1 text-xs text-[#888] font-mono focus:outline-none focus:border-purple-500/50"
@@ -153,7 +169,7 @@ export default function PreviewPanel({ port, projectId, onPortChange }: PreviewP
         >
           <iframe
             ref={iframeRef}
-            src={url}
+            src={sanitizePreviewUrl(url) || undefined}
             className="w-full h-full border-0 bg-white"
             onLoad={() => setLoading(false)}
             onError={() => { setLoading(false); setError('Failed to load preview') }}

@@ -11,8 +11,28 @@ router.post('/connect', async (req, res) => {
       return res.status(400).json({ error: 'projectId, supabaseUrl, and supabaseKey are required' });
     }
 
-    // Test connection
-    const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+    // Validate the Supabase URL
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(supabaseUrl);
+    } catch {
+      return res.status(400).json({ error: 'Invalid Supabase URL' });
+    }
+
+    if (parsedUrl.protocol !== 'https:') {
+      return res.status(400).json({ error: 'Supabase URL must use HTTPS' });
+    }
+
+    // Only allow supabase.co or self-hosted instances (no localhost in production patterns)
+    const allowedSuffixes = ['.supabase.co', '.supabase.in'];
+    const isAllowed = allowedSuffixes.some(s => parsedUrl.hostname.endsWith(s));
+    if (!isAllowed && process.env.NODE_ENV === 'production') {
+      return res.status(400).json({ error: 'Supabase URL hostname not recognized' });
+    }
+
+    // Test connection using the validated URL
+    const testUrl = new URL('/rest/v1/', parsedUrl.origin);
+    const response = await fetch(testUrl.toString(), {
       headers: {
         'apikey': supabaseKey,
         'Authorization': `Bearer ${supabaseKey}`,
@@ -42,7 +62,10 @@ router.get('/tables', async (req, res) => {
       return res.status(400).json({ error: 'Supabase not configured for this project' });
     }
 
-    const response = await fetch(`${project.supabase_url}/rest/v1/?select=*`, {
+    // Use only the stored (already-validated) URL
+    const tablesUrl = new URL('/rest/v1/', project.supabase_url);
+    tablesUrl.searchParams.set('select', '*');
+    const response = await fetch(tablesUrl.toString(), {
       headers: {
         'apikey': project.supabase_key,
         'Authorization': `Bearer ${project.supabase_key}`,

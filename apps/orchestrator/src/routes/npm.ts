@@ -10,7 +10,13 @@ router.get('/search', async (req, res) => {
     const { q, size = '10' } = req.query as any;
     if (!q) return res.status(400).json({ error: 'q is required' });
 
-    const response = await fetch(`${NPM_REGISTRY}/-/v1/search?text=${encodeURIComponent(q)}&size=${size}`);
+    // Only proxy to the official npm registry
+    const safeSize = Math.min(parseInt(size, 10) || 10, 50);
+    const searchUrl = new URL('/-/v1/search', NPM_REGISTRY);
+    searchUrl.searchParams.set('text', q);
+    searchUrl.searchParams.set('size', String(safeSize));
+
+    const response = await fetch(searchUrl.toString());
     const data = await response.json() as any;
 
     const packages = data.objects?.map((obj: any) => ({
@@ -32,7 +38,12 @@ router.get('/search', async (req, res) => {
 router.get('/info/:package(*)', async (req, res) => {
   try {
     const packageName = req.params.package;
-    const response = await fetch(`${NPM_REGISTRY}/${packageName}`);
+    // Validate package name (allow scoped packages like @scope/name)
+    if (!/^(@[\w.-]+\/)?[\w.-]+$/.test(packageName)) {
+      return res.status(400).json({ error: 'Invalid package name' });
+    }
+    const infoUrl = new URL(`/${encodeURIComponent(packageName)}`, NPM_REGISTRY);
+    const response = await fetch(infoUrl.toString());
     if (!response.ok) return res.status(404).json({ error: 'Package not found' });
 
     const data = await response.json() as any;
