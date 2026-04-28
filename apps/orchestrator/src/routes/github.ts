@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { type IRouter, Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
@@ -6,7 +6,7 @@ import db from '../db';
 import { initGitRepo } from '../git/service';
 import simpleGit from 'simple-git';
 
-const router = Router();
+const router: IRouter = Router();
 const PROJECTS_DIR = process.env.PROJECTS_DIR || path.join(process.cwd(), 'projects');
 
 // POST /api/github/import

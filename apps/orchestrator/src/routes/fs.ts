@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { type IRouter, Router } from 'express';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
 import mime from 'mime-types';
 import db from '../db';
 
-const router = Router();
+const router: IRouter = Router();
 
 function getProjectPath(projectId: string): string {
   const project = db.prepare('SELECT path FROM projects WHERE id = ?').get(projectId) as any;

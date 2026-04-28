@@ -1,7 +1,7 @@
-import { Router } from 'express';
+import { type IRouter, Router } from 'express';
 import db from '../db';
 
-const router = Router();
+const router: IRouter = Router();
 
 // GET /api/usage?projectId=
 router.get('/', (req, res) => {

@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { type IRouter, Router } from 'express';
 import { spawn } from 'child_process';
 import db from '../db';
 
-const router = Router();
+const router: IRouter = Router();
 
 // Allowlist of permitted command prefixes for the exec endpoint
 const ALLOWED_COMMAND_PREFIXES = [

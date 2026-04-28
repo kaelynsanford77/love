@@ -1,9 +1,9 @@
-import { Router, Request, Response } from 'express';
+import { type IRouter, Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db';
 import { runAgent } from '../llm/agent';
 
-const router = Router();
+const router: IRouter = Router();
 
 // POST /api/chat
 router.post('/', async (req: Request, res: Response) => {

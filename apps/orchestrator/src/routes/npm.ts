@@ -1,6 +1,6 @@
-import { Router } from 'express';
+import { type IRouter, Router } from 'express';
 
-const router = Router();
+const router: IRouter = Router();
 
 const NPM_REGISTRY = 'https://registry.npmjs.org';
 

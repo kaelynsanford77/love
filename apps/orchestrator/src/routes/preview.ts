@@ -1,7 +1,7 @@
-import { Router } from 'express';
+import { type IRouter, Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
-const router = Router();
+const router: IRouter = Router();
 
 // POST /api/preview/share
 router.post('/share', (req, res) => {

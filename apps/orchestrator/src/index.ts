@@ -17,7 +17,7 @@ import supabaseRouter from './routes/supabase';
 import usageRouter from './routes/usage';
 import { setupTerminalWs } from './routes/terminal';
 
-const app = express();
+const app: express.Application = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 
 // ─── Simple in-memory rate limiter ────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { type IRouter, Router } from 'express';
 import db from '../db';
 import {
   getGitLog,
@@ -8,7 +8,7 @@ import {
   checkoutBranch,
 } from '../git/service';
 
-const router = Router();
+const router: IRouter = Router();
 
 function getProjectPath(projectId: string): string {
   const project = db.prepare('SELECT path FROM projects WHERE id = ?').get(projectId) as any;
