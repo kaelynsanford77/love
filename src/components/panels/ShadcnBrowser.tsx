@@ -266,7 +266,7 @@ export function ShadcnBrowser() {
 
                 {/* Mini preview */}
                 <div className="bg-muted/50 rounded p-2 mb-2 text-xs font-mono text-muted-foreground h-12 overflow-hidden flex items-center justify-center">
-                  {comp.preview.replace(/<[^>]*>/g, '').substring(0, 40)}
+                  {comp.name} Preview
                 </div>
 
                 <div className="flex gap-1">
