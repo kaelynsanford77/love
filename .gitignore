@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+*.db
+.DS_Store
+apps/*/node_modules/
+apps/*/dist/
+workspaces/
+*.local
+.vite/
