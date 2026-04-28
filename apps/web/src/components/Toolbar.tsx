@@ -19,9 +19,18 @@ import {
   GitBranch,
   Zap,
   ChevronDown,
+  Search,
+  Database,
+  Github,
+  Settings,
+  Terminal,
+  QrCode,
+  Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Mode, Viewport } from '@/App';
+import { useStore } from '@/store/useStore';
+import { toast } from 'sonner';
 
 interface ToolbarProps {
   mode: Mode;
@@ -31,6 +40,11 @@ interface ToolbarProps {
   route: string;
   onRouteChange: (r: string) => void;
   onTerminalToggle: () => void;
+  onOpenCommandPalette: () => void;
+  onOpenGitHubImport: () => void;
+  onOpenSupabase: () => void;
+  onOpenProjectSwitcher: () => void;
+  onOpenQRPairing: () => void;
 }
 
 const MODES: { id: Mode; icon: React.ReactNode; label: string }[] = [
@@ -55,9 +69,19 @@ export default function Toolbar({
   onViewportChange,
   route,
   onRouteChange,
+  onTerminalToggle,
+  onOpenCommandPalette,
+  onOpenGitHubImport,
+  onOpenSupabase,
+  onOpenProjectSwitcher,
+  onOpenQRPairing,
 }: ToolbarProps) {
   const [vpOpen, setVpOpen] = useState(false);
-  const [projectOpen, setProjectOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const { projects, currentProjectId } = useStore();
+
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+  const projectName = currentProject?.name ?? 'Lovable Solo';
 
   return (
     <div
@@ -66,35 +90,22 @@ export default function Toolbar({
     >
       {/* Left group */}
       <div className="flex items-center gap-1">
-        <div className="relative">
-          <button
-            onClick={() => setProjectOpen((v) => !v)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-accent/20 font-semibold text-sm text-foreground transition-colors"
-          >
-            Lovable Solo
-            <ChevronDown size={13} className="text-muted-foreground" />
-          </button>
-          {projectOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg shadow-xl p-1 z-50 min-w-[180px]">
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">Switch Project</div>
-              <button
-                className="w-full text-left px-2 py-1.5 rounded hover:bg-accent/20 text-sm"
-                onClick={() => setProjectOpen(false)}
-              >
-                Lovable Solo
-              </button>
-            </div>
-          )}
-        </div>
+        <button
+          onClick={onOpenProjectSwitcher}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-accent/20 font-semibold text-sm text-foreground transition-colors max-w-[160px]"
+        >
+          <span className="truncate">{projectName}</span>
+          <ChevronDown size={13} className="text-muted-foreground shrink-0" />
+        </button>
         <ToolbarIconBtn icon={<History size={15} />} tooltip="History" />
         <ToolbarIconBtn icon={<Columns2 size={15} />} tooltip="Split view" />
       </div>
 
       {/* Separator */}
-      <div className="w-px h-5 bg-border mx-1" />
+      <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
 
       {/* Mode switcher */}
-      <div className="flex items-center relative">
+      <div className="hidden sm:flex items-center relative">
         {MODES.map((m) => (
           <button
             key={m.id}
@@ -107,17 +118,40 @@ export default function Toolbar({
             )}
           >
             {m.icon}
-            <span>{m.label}</span>
+            <span className="hidden md:inline">{m.label}</span>
           </button>
         ))}
-        <ToolbarIconBtn icon={<MoreHorizontal size={15} />} tooltip="More" />
+        {/* More menu */}
+        <div className="relative">
+          <button
+            onClick={() => setMoreOpen((v) => !v)}
+            className="relative flex items-center justify-center w-7 h-7 rounded hover:bg-accent/20 text-muted-foreground hover:text-foreground transition-colors"
+            title="More"
+          >
+            <MoreHorizontal size={15} />
+          </button>
+          {moreOpen && (
+            <div
+              className="absolute top-full left-0 mt-1 bg-card border border-border rounded-xl shadow-xl p-1 z-50 min-w-[200px]"
+              onClick={() => setMoreOpen(false)}
+            >
+              <MoreMenuItem icon={<Terminal size={13} />} label="Toggle Terminal" onClick={onTerminalToggle} />
+              <MoreMenuItem icon={<Github size={13} />} label="Import GitHub Repo" onClick={onOpenGitHubImport} />
+              <MoreMenuItem icon={<Database size={13} />} label="Connect Database" onClick={onOpenSupabase} />
+              <MoreMenuItem icon={<QrCode size={13} />} label="Mobile Access (QR)" onClick={onOpenQRPairing} />
+              <div className="h-px bg-border my-1" />
+              <MoreMenuItem icon={<Search size={13} />} label="Command Palette ⌘K" onClick={onOpenCommandPalette} />
+              <MoreMenuItem icon={<Settings size={13} />} label="Settings" onClick={() => useStore.getState().setSettingsOpen(true)} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Separator */}
-      <div className="w-px h-5 bg-border mx-1" />
+      <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
 
       {/* URL controls */}
-      <div className="flex items-center gap-1">
+      <div className="hidden sm:flex items-center gap-1">
         {/* Viewport picker */}
         <div className="relative">
           <button
@@ -153,27 +187,71 @@ export default function Toolbar({
           className="w-32 px-2 py-1 rounded bg-muted/60 border border-border text-sm focus:outline-none focus:ring-1 focus:ring-ring text-foreground"
           placeholder="/"
         />
-        <ToolbarIconBtn icon={<ArrowUpRight size={14} />} tooltip="Open in new tab" />
+        <ToolbarIconBtn icon={<ArrowUpRight size={14} />} tooltip="Open in new tab" onClick={() => window.open(route, '_blank')} />
         <ToolbarIconBtn icon={<RotateCw size={14} />} tooltip="Reload" />
       </div>
 
       {/* Spacer */}
       <div className="flex-1" />
 
+      {/* Command palette button (mobile) */}
+      <button
+        onClick={onOpenCommandPalette}
+        className="sm:hidden flex items-center justify-center w-7 h-7 rounded hover:bg-accent/20 text-muted-foreground transition-colors"
+        title="Command Palette"
+      >
+        <Search size={15} />
+      </button>
+
       {/* Right group */}
       <div className="flex items-center gap-1">
-        <ToolbarIconBtn icon={<MessageCircle size={15} />} tooltip="Comments" badge={2} />
+        {/* ⌘K hint */}
+        <button
+          onClick={onOpenCommandPalette}
+          className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded hover:bg-accent/20 text-muted-foreground hover:text-foreground transition-colors text-xs"
+          title="Command Palette (⌘K)"
+        >
+          <Search size={13} />
+          <kbd className="bg-muted px-1 rounded text-[10px]">⌘K</kbd>
+        </button>
+        <ToolbarIconBtn icon={<MessageCircle size={15} />} tooltip="Comments" badge={0} />
         <ToolbarIconBtn icon={<GitBranch size={15} />} tooltip="Git" />
-        <button className="px-3 py-1 rounded-md text-sm font-medium hover:bg-accent/20 text-muted-foreground transition-colors">
-          <Share2 size={14} className="inline mr-1.5" />
+        <button
+          className="px-3 py-1 rounded-md text-sm font-medium hover:bg-accent/20 text-muted-foreground transition-colors hidden sm:flex items-center gap-1.5"
+          onClick={() => {
+            navigator.clipboard.writeText(window.location.href);
+            toast.success('Link copied!');
+          }}
+        >
+          <Share2 size={14} />
           Share
         </button>
         <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
           <Zap size={14} />
-          Publish
+          <span className="hidden sm:inline">Publish</span>
         </button>
       </div>
     </div>
+  );
+}
+
+function MoreMenuItem({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors text-left"
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 
@@ -181,14 +259,17 @@ function ToolbarIconBtn({
   icon,
   tooltip,
   badge,
+  onClick,
 }: {
   icon: React.ReactNode;
   tooltip: string;
   badge?: number;
+  onClick?: () => void;
 }) {
   return (
     <button
       title={tooltip}
+      onClick={onClick}
       className="relative flex items-center justify-center w-7 h-7 rounded hover:bg-accent/20 text-muted-foreground hover:text-foreground transition-colors"
     >
       {icon}

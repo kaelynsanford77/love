@@ -5,3 +5,6 @@ dist/
 .DS_Store
 apps/*/node_modules/
 apps/*/dist/
+workspaces/
+*.local
+.vite/
