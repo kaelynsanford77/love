@@ -4,15 +4,19 @@ import db from '../db';
 
 const router: IRouter = Router();
 
-// Allowlist of permitted command prefixes for the exec endpoint
-const ALLOWED_COMMAND_PREFIXES = [
-  'bun ', 'npm ', 'npx ', 'node ', 'tsc', 'vite',
-  'git ', 'ls', 'cat ', 'echo ', 'pwd', 'find ',
-];
+// Strict allowlist of permitted binary names (first token of command)
+const ALLOWED_BINARIES = new Set([
+  'bun', 'npm', 'npx', 'node', 'tsc', 'vite',
+  'git', 'ls', 'cat', 'echo', 'pwd', 'find',
+  'bunx', 'wrangler', 'netlify', 'vercel',
+]);
 
-function isCommandAllowed(command: string): boolean {
-  const trimmed = command.trim();
-  return ALLOWED_COMMAND_PREFIXES.some(prefix => trimmed.startsWith(prefix));
+function isCommandAllowed(parts: string[]): boolean {
+  if (parts.length === 0) return false;
+  const bin = parts[0];
+  if (!ALLOWED_BINARIES.has(bin)) return false;
+  // Reject any argument that looks like a shell metacharacter injection
+  return parts.every(p => !/[;&|`$<>()\n\r]/.test(p));
 }
 
 // POST /api/exec
@@ -21,17 +25,15 @@ router.post('/', async (req, res) => {
     const { projectId, command } = req.body;
     if (!projectId || !command) return res.status(400).json({ error: 'projectId and command required' });
 
-    if (!isCommandAllowed(command)) {
+    const parts: string[] = String(command).trim().split(/\s+/);
+    if (!isCommandAllowed(parts)) {
       return res.status(400).json({ error: 'Command not allowed. Use bun/npm/npx/node/git/tsc commands.' });
     }
 
     const project = db.prepare('SELECT path FROM projects WHERE id = ?').get(projectId) as any;
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
-    // Use spawn with shell: false by splitting the command
-    const parts = command.trim().split(/\s+/);
-    const cmd = parts[0];
-    const args = parts.slice(1);
+    const [cmd, ...args] = parts;
 
     await new Promise<void>((resolve) => {
       const proc = spawn(cmd, args, {

@@ -107,10 +107,11 @@ export function streamChat(
         const lines = buffer.split('\n')
         buffer = lines.pop() || ''
 
-        for (const line of lines) {
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i]
           if (line.startsWith('event: ')) {
             const eventName = line.slice(7).trim()
-            const dataLine = lines[lines.indexOf(line) + 1]
+            const dataLine = lines[i + 1]
             if (dataLine?.startsWith('data: ')) {
               try {
                 const data = JSON.parse(dataLine.slice(6))

@@ -109,7 +109,7 @@ export default function PreviewPanel({ port, projectId, onPortChange }: PreviewP
             onKeyDown={e => {
               if (e.key === 'Enter' && iframeRef.current) {
                 const safe = sanitizePreviewUrl(url);
-                if (safe) iframeRef.current.src = safe;
+                if (safe) iframeRef.current.setAttribute('src', safe);
               }
             }}
             className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-3 py-1 text-xs text-[#888] font-mono focus:outline-none focus:border-purple-500/50"

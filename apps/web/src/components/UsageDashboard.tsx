@@ -13,17 +13,16 @@ export default function UsageDashboard({ projectId, onClose }: UsageDashboardPro
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    async function loadData() {
+      setLoading(true)
+      try {
+        const result = await usageApi.get(projectId)
+        setData(result)
+      } catch {}
+      finally { setLoading(false) }
+    }
     loadData()
   }, [projectId])
-
-  async function loadData() {
-    setLoading(true)
-    try {
-      const result = await usageApi.get(projectId)
-      setData(result)
-    } catch {}
-    finally { setLoading(false) }
-  }
 
   const totals = data?.totals || {}
   const timeline = data?.timeline || []

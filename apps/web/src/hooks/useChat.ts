@@ -177,7 +177,7 @@ export function useChat(projectId: string | undefined) {
       setIsStreaming(false)
       abortRef.current = null
     }
-  }, [projectId, isStreaming, messages.length])
+  }, [projectId, isStreaming])
 
   const stopStreaming = useCallback(() => {
     abortRef.current?.abort()
