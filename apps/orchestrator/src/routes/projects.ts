@@ -3,8 +3,26 @@ import { join } from "path";
 import { mkdir, readFile, writeFile, rm } from "fs/promises";
 import { existsSync } from "fs";
 import { execSync } from "child_process";
-import type { Project, ImportConfig } from "@love/shared";
 import { randomUUID } from "crypto";
+
+interface Project {
+  id: string;
+  name: string;
+  framework: string;
+  githubRemote?: string;
+  supabaseUrl?: string;
+  devPort?: number;
+  status: "idle" | "running" | "stopped" | "error";
+  lastModified: string;
+  createdAt: string;
+  description?: string;
+}
+
+interface ImportConfig {
+  repoUrl: string;
+  branch: string;
+  name?: string;
+}
 
 const app = new Hono();
 const DATA_DIR = process.env.DATA_DIR ?? join(process.cwd(), "data");

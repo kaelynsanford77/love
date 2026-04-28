@@ -49,6 +49,9 @@ app.post("/:projectId", async (c) => {
   const systemPrompt = getSystemPrompt(project);
   const openai = getOpenAIClient();
 
+  c.header("Content-Type", "text/event-stream");
+  c.header("Cache-Control", "no-cache");
+
   return stream(
     c,
     async (s) => {
@@ -119,8 +122,7 @@ app.post("/:projectId", async (c) => {
           }
         }
       }
-    },
-    { headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } }
+    }
   );
 });
 

@@ -9,8 +9,14 @@ const DATA_DIR = process.env.DATA_DIR ?? join(process.cwd(), "data");
 const CONNECTIONS_FILE = join(DATA_DIR, "supabase-connections.json");
 
 function getEncryptionKey(): Buffer {
-  const key = process.env.VAULT_ENCRYPTION_KEY ?? "default-key-change-this-in-prod!";
-  return createHash("sha256").update(key).digest();
+  const key = process.env.VAULT_ENCRYPTION_KEY;
+  if (!key) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("VAULT_ENCRYPTION_KEY must be set in production");
+    }
+    console.warn("[WARN] VAULT_ENCRYPTION_KEY is not set. Using insecure default key — do not use in production!");
+  }
+  return createHash("sha256").update(key ?? "dev-only-key-not-for-production!").digest();
 }
 
 function encrypt(text: string): string {
