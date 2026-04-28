@@ -1,0 +1,18 @@
+{
+  "name": "lovable-solo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "concurrently \"bun run dev:orchestrator\" \"bun run dev:ide\"",
+    "dev:orchestrator": "cd apps/orchestrator && bun run dev",
+    "dev:ide": "cd apps/ide && bun run dev",
+    "build": "bun run build:orchestrator && bun run build:ide",
+    "build:orchestrator": "cd apps/orchestrator && bun run build",
+    "build:ide": "cd apps/ide && bun run build",
+    "install:all": "bun install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

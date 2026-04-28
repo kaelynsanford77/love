@@ -1,0 +1,26 @@
+# Caddyfile — Lovable Solo reverse proxy
+
+# Local development / self-hosted (replace yourdomain.com with your domain)
+:80 {
+    # IDE
+    handle / {
+        reverse_proxy ide:3000
+    }
+
+    # Orchestrator API
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy orchestrator:4000
+    }
+}
+
+# Production with TLS (uncomment and set your domain)
+# yourdomain.com {
+#     handle / {
+#         reverse_proxy ide:3000
+#     }
+#     handle /api/* {
+#         uri strip_prefix /api
+#         reverse_proxy orchestrator:4000
+#     }
+# }

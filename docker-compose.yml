@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  orchestrator:
+    build:
+      context: ./apps/orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - WORKSPACES_DIR=/data/workspaces
+      - DB_DIR=/data/db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.quatarly.cloud/v1}
+      - LLM_ROUTING=${LLM_ROUTING:-auto}
+      - LLM_MODEL_FAST=${LLM_MODEL_FAST:-claude-haiku-4-5-20251001}
+      - LLM_MODEL_STANDARD=${LLM_MODEL_STANDARD:-claude-sonnet-4-6-thinking}
+      - LLM_MODEL_POWERFUL=${LLM_MODEL_POWERFUL:-claude-opus-4-6-thinking}
+      - SECRETS_ENCRYPTION_KEY=${SECRETS_ENCRYPTION_KEY:-change-me-32-chars-please!!!!!}
+    volumes:
+      - orchestrator_data:/data
+    restart: unless-stopped
+    networks:
+      - lovable
+
+  ide:
+    build:
+      context: ./apps/ide
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_ORCHESTRATOR_URL=http://orchestrator:4000
+    depends_on:
+      - orchestrator
+    restart: unless-stopped
+    networks:
+      - lovable
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - orchestrator
+      - ide
+    restart: unless-stopped
+    networks:
+      - lovable
+
+volumes:
+  orchestrator_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  lovable:
+    driver: bridge
