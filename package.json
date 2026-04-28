@@ -1,0 +1,10 @@
+{
+  "name": "lovable-solo",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/orchestrator & npm run dev --workspace=apps/ide",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/ide",
+    "start": "npm run start --workspace=apps/orchestrator"
+  }
+}
