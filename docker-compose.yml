@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  orchestrator:
+    build:
+      context: ./apps/orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - LLM_MODEL_FAST=${LLM_MODEL_FAST:-gpt-4o-mini}
+      - LLM_MODEL_STANDARD=${LLM_MODEL_STANDARD:-gpt-4o}
+      - LLM_MODEL_POWERFUL=${LLM_MODEL_POWERFUL:-gpt-4o}
+      - PROJECTS_DIR=/data/projects
+      - DB_PATH=/data/love.db
+      - WEB_URL=http://web:5173
+    volumes:
+      - love_data:/data
+    networks:
+      - love_net
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    depends_on:
+      - orchestrator
+    networks:
+      - love_net
+    restart: unless-stopped
+
+volumes:
+  love_data:
+
+networks:
+  love_net:
+    driver: bridge

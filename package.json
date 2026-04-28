@@ -1,0 +1,20 @@
+{
+  "name": "love",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"bun run dev:orchestrator\" \"bun run dev:web\"",
+    "dev:orchestrator": "cd apps/orchestrator && bun run dev",
+    "dev:web": "cd apps/web && bun run dev",
+    "build": "bun run build:orchestrator && bun run build:web",
+    "build:orchestrator": "cd apps/orchestrator && bun run build",
+    "build:web": "cd apps/web && bun run build",
+    "install:all": "bun install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
