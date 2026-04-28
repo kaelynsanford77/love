@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+*.local
+.DS_Store
+workspaces/
+data/
+*.db
+*.db-wal
+*.db-shm
+dist-node/
+ios/
+android/
+.capacitor/
