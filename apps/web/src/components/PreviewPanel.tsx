@@ -60,7 +60,6 @@ export default function PreviewPanel({ src, viewport, viewportSizes, route }: Pr
               src={fullSrc}
               className="w-full h-full border-0"
               onLoad={() => setLoading(false)}
-              onLoadStart={() => setLoading(true)}
               title="Preview"
             />
           </div>
