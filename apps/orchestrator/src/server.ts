@@ -13,6 +13,8 @@ import { projectsRoutes } from './routes/projects';
 import { runtimeRoutes } from './routes/runtime';
 import { dbRoutes } from './routes/db';
 import { publishRoutes } from './routes/publish';
+import { githubRoutes } from './routes/github';
+import { supabaseRoutes } from './routes/supabase';
 
 const app = new Hono();
 
@@ -57,6 +59,8 @@ app.route('/projects', projectsRoutes);
 app.route('/runtime', runtimeRoutes);
 app.route('/db', dbRoutes);
 app.route('/publish', publishRoutes);
+app.route('/github', githubRoutes);
+app.route('/supabase', supabaseRoutes);
 
 // Analytics stub
 app.get('/analytics', (c) => c.json({ message: 'Analytics not configured', tables: [], stats: {} }));

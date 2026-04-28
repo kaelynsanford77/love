@@ -5,13 +5,13 @@ const config: CapacitorConfig = {
   appName: 'Lovable Solo',
   webDir: 'dist',
   server: {
-    // For remote server usage — set to your deployed URL
-    // url: 'https://ide.yourdomain.com',
-    // cleartext: true,
+    androidScheme: 'https',
   },
   plugins: {
-    PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert'],
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#09090b',
+      showSpinner: false,
     },
   },
 };

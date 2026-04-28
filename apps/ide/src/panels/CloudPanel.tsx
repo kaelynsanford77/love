@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Database, Table2, Shield, Play, Plus, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
+import { SupabaseWizard } from '@/components/SupabaseWizard';
 
 interface TableInfo {
   name: string;
@@ -159,6 +160,20 @@ function cn(...args: (string | undefined | false)[]) {
 }
 
 export function CloudPanel() {
+  const { supabaseConnected } = useStore();
+
+  if (!supabaseConnected) {
+    return (
+      <div className="flex flex-col h-full bg-background">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-border shrink-0">
+          <Database className="h-4 w-4 text-primary" />
+          <span className="font-semibold text-sm">Cloud & Database</span>
+        </div>
+        <SupabaseWizard />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
