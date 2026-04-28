@@ -1,27 +1,3 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 # Dependencies
 node_modules/
 
@@ -30,34 +6,36 @@ dist/
 build/
 .next/
 .nuxt/
+.output/
 
 # Environment
 .env
 .env.local
 .env.*.local
 
-# Lock files (use bun.lock only)
+# Lock files (regenerated locally)
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+bun.lockb
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
 
 # Logs
 *.log
 npm-debug.log*
 
-# IDE
+# IDE files
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Tauri build
+# Tauri build output
 src-tauri/target/
 
-# Capacitor
+# Capacitor native projects
 android/
 ios/
