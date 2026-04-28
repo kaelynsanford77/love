@@ -1,0 +1,11 @@
+{
+  "name": "love",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:orchestrator": "npm run dev --workspace=apps/orchestrator",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspaces",
+    "install:all": "npm install"
+  }
+}
